@@ -1,0 +1,9 @@
+terraform {
+  backend "local" {
+  }
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = "<to be updated with an azure subscription id> "
+}
