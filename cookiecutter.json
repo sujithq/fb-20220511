@@ -1,0 +1,6 @@
+{
+  "project_slug": "<to be updated with a project slug>",
+  "terraform_required_version": ">= 1.0.0",
+  "terraform_required_azurerm_version": ">3.0",
+  "subscription_id": "<to be updated with an azure subscription id>"
+}
