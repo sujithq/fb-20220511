@@ -11,6 +11,10 @@ terraform {
       source  = "hashicorp/azuread"
       version = ">2.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = ">3.0"
+    }
   }
 }
 
@@ -28,13 +32,19 @@ data "azuread_service_principal" "MicrosoftWebApp" {
 
 data "azurerm_client_config" "current" {}
 
+resource "random_string" "random" {
+  length           = 3
+  special          = false
+  lower = true
+}
+
 resource "azurerm_resource_group" "this" {
-  name     = "fb-20220511"
+  name     = "rg-fb-20220511"
   location = "westeurope"
 }
 
 resource "azurerm_key_vault" "this" {
-  name                = "kvfb20220511"
+  name                = "kvfb20220511${random_string.random.result}"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
@@ -172,11 +182,11 @@ resource "azurerm_key_vault_certificate" "this" {
 data "azurerm_key_vault_certificate" "this" {
   name         = azurerm_key_vault_certificate.this.name
   key_vault_id = azurerm_key_vault.this.id
-  }
+}
 
 
 resource "azurerm_service_plan" "this" {
-  name                = "fb-20220511"
+  name                = "plan-fb-20220511"
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
   os_type             = "Linux"
@@ -184,7 +194,7 @@ resource "azurerm_service_plan" "this" {
 }
 
 resource "azurerm_linux_web_app" "this" {
-  name                = "fb-20220511"
+  name                = "app-fb-20220511-${random_string.random.result}"
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_service_plan.this.location
   service_plan_id     = azurerm_service_plan.this.id
@@ -193,12 +203,11 @@ resource "azurerm_linux_web_app" "this" {
 }
 
 resource "azurerm_app_service_certificate" "this" {
-  name                = "fb-20220511-cert"
+  name                = "app-cert-fb-20220511"
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
   # pfx_blob            = azurerm_key_vault_certificate.this.certificate_data_base64
   key_vault_secret_id = data.azurerm_key_vault_certificate.this.secret_id
   # password            = "terraform"
   depends_on = [azurerm_key_vault_access_policy.MicrosoftWebApp]
-  app
 }
